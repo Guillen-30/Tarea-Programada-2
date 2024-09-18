@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empleados</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Lista de Empleados</h1>
+        <form action="#" method="GET">
+            <input type="text" placeholder="Buscar por nombre o documento">
+            <button type="submit">Filtrar</button>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Documento de Identidad</th>
+                    <th>Puesto</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Placeholder data -->
+                <tr>
+                    <td>Kaitlyn Jensen</td>
+                    <td>6993943</td>
+                    <td>Camarero</td>
+                    <td>
+                        <a href="editar-empleado.html">Editar</a> | 
+                        <a href="movimientos.html">Ver Movimientos</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Robert Buchanan</td>
+                    <td>1896802</td>
+                    <td>Albañil</td>
+                    <td>
+                        <a href="editar-empleado.html">Editar</a> | 
+                        <a href="movimientos.html">Ver Movimientos</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a href="insertar-empleado.html" class="button">Insertar Empleado</a>
+    </div>
+</body>
+</html>

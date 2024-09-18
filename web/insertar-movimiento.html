@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insertar Movimiento</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="form-container">
+        <h1>Insertar Movimiento</h1>
+        <form action="#" method="POST">
+            <label for="tipo-movimiento">Tipo de Movimiento:</label>
+            <select id="tipo-movimiento" name="tipo-movimiento">
+                <option value="venta-vacaciones">Venta de vacaciones</option>
+                <option value="bono-vacacional">Bono vacacional</option>
+                <!-- Más tipos de movimientos -->
+            </select>
+
+            <label for="monto">Monto:</label>
+            <input type="number" id="monto" name="monto" placeholder="Ingrese el monto" required>
+
+            <button type="submit">Guardar Movimiento</button>
+        </form>
+    </div>
+</body>
+</html>
