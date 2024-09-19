@@ -3,11 +3,6 @@ import xml.etree.ElementTree as ET
 tree = ET.parse('Datos.xml')
 root = tree.getroot()
 
-################### CONNEXION SQL ##################
-
-
-
-################## CONEXION SQL ####################git 
 puestos = [] #
 tipo_evento = [] #
 tipo_movimiento = [] #
@@ -16,6 +11,17 @@ movimientos = [] #
 usuarios = []
 error = [] #
 
+################### CONNEXION SQL ##################
+import pandas as pd
+from sqlalchemy import create_engine, text
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+def conexion_sql_server():
+    connection_string = 'mssql+pyodbc://sa:BasesTec@25.8.143.41/Tarea Programada 2?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes'
+    engine = create_engine(connection_string)
+    return engine
+################## CONEXION SQL ####################git 
 
 
 for child in root:
@@ -44,7 +50,7 @@ for child in root:
             # Recorrer cada nodo 'movimiento' en el nodo 'Movimientos'
             for errores in child:
                 # Obtener los atributos como diccionario
-                atributos = error.attrib
+                atributos = errores.attrib
                 # Guardar los atributos en la lista
                 error.append(atributos)        
     elif child.tag == "Usuarios":
@@ -68,3 +74,41 @@ for child in root:
             atributos = tevento.attrib
             # Guardar los atributos en la lista
             tipo_evento.append(atributos)
+            
+for elemento in puestos:
+    name = ""
+    salary = ""
+    for suka in elemento:    
+        if name == "":
+            name = elemento[suka]
+            print(name)
+        else:
+            salary = elemento[suka]
+            print(salary)
+            
+
+
+def insertar_puesto(diccionario):
+    for elemento in puestos:
+        name = ""
+        salary = ""
+        for suka in elemento:    
+            if name == "":
+                name = elemento[suka]
+                print(name)
+            else:
+                salary = elemento[suka]
+             
+        try:
+            sql_query = text(f"EXEC InsertarPuesto @Nombre='{name}', @Salario={salary}")
+            engine = conexion_sql_server()
+            with engine.connect() as connection :
+                connection.execute(sql_query)
+                connection.commit()
+
+            #engine.execute(sql_query)
+            return 
+        except Exception as e:
+            print(f"\n\n\n{e}\n\n\n")
+            return
+insertar_puesto(puestos)
