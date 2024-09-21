@@ -65,6 +65,13 @@ CREATE TABLE BitacoraEvento (
     FOREIGN KEY (IdPostByUser) REFERENCES Usuario(Id)
 );
 
+CREATE TABLE Error (
+    [Id] [int] IDENTITY(1,1) PRIMARY KEY NOT NULL,
+    [Codigo] [int]  NOT NULL,
+    [Descripcion] TEXT NOT NULL
+);
+
+
 CREATE TABLE [dbo].[DBErrors](
 	[ErrorID] [int] IDENTITY(1,1) NOT NULL,
 	[UserName] [varchar](100) NULL,

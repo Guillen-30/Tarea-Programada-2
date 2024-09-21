@@ -79,8 +79,7 @@ for child in root:
 
 from sqlalchemy import create_engine, text
 
-def insertar_puesto(diccionario):
-    engine = conexion_sql_server()
+def insertar_puesto(engine):
 
     for elemento in puestos:
         name = elemento['Nombre']
@@ -106,16 +105,49 @@ def insertar_puesto(diccionario):
 
                 # Log the output result code
                 print(f"Stored Procedure executed. Output Result Code: {out_result_code}")
-
-                if out_result_code == 50001:
-                    print(f"Record with the name '{name}' already exists. No insert performed.")
-                elif out_result_code == 50005:
-                    print(f"An error occurred during the insertion of '{name}'.")
-                else:
+                if out_result_code == 0:
                     print(f"Record for '{name}' inserted successfully with salary '{salary}'.")
+                else:
+                    print(f"Error inserting record for '{name}' with salary '{salary}'. Error Code: {out_result_code} Error Message: {error[out_result_code]}")
 
         except Exception as e:
             print(f"\n\n\nError: {e}\n\n\n")
 
-insertar_puesto(puestos)
+def insertar_error(engine):
+        for elemento in error:
+            codigo = elemento['Codigo']
+            descripcion = elemento['Descripcion']
+    
+            try:
+                # Define the query to call the stored procedure with output parameter using bind parameters
+                sql_query = text("""
+                    DECLARE @OutResulTCode INT;
+                    EXEC InsertarError 
+                        @Codigo = :codigo, 
+                        @Descripcion = :descripcion,
+                        @OutResulTCode = @OutResulTCode OUTPUT;
+                    SELECT @OutResulTCode;
+                """)
+    
+                # Begin a transaction explicitly
+                with engine.begin() as connection:
+                    result = connection.execute(sql_query, {'codigo': codigo, 'descripcion': descripcion})
+    
+                    # Fetch the result code from the output parameter
+                    out_result_code = result.fetchone()[0]
+    
+                    # Log the output result code
+                    print(f"Stored Procedure executed. Output Result Code: {out_result_code}")
+                    if out_result_code == 0:
+                        print(f"Record for '{codigo}' inserted successfully with descripcion '{descripcion}'.")
+                    else:
+                        print(f"Error inserting record for '{codigo}' with descripcion '{descripcion}'. Error Code: {out_result_code} Error Message: {error[out_result_code]}")
+    
+            except Exception as e:
+                print(f"\n\n\nError: {e}\n\n\n")
 
+insertar_error(conexion_sql_server())
+
+def get_error_by_code(engine, codigo):
+    pass
+    #HACER Y SUSTITUIR EN LINEA 144
