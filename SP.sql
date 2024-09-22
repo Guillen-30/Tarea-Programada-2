@@ -1,4 +1,4 @@
-USE [Puesto]
+USE [Tarea Programada 2]
 GO
 SET ANSI_NULLS ON
 GO
