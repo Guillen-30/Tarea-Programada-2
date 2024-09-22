@@ -115,24 +115,22 @@ def insertar_puesto(engine):
 def buscar_puesto(nombre,engine):
     try:
         sql_query = text("""
-                    DECLARE @OutResulTCode INT;
-                    DECLARE @OutPuestoSalario MONEY;
-                    EXEC BuscarPuesto 
-                        @Nombre = :name,
-                        @OutPuestoSalario = @OutPuestoSalario OUTPUT,
-                        @OutResulTCode = @OutResulTCode OUTPUT;
-                    SELECT @OutResulTCode;
-                    SELECT @OutPuestoSalario;
-                """)
+            DECLARE @OutResultCode INT;
+            DECLARE @OutPuestoSalario MONEY;
+            
+            EXEC BuscarPuesto
+                @Nombre = :name,
+                @OutResultCode = @OutResultCode OUTPUT,
+                @OutPuestoSalario = @OutPuestoSalario OUTPUT;
+            
+            SELECT @OutResultCode AS OutResultCode, @OutPuestoSalario AS OutPuestoSalario;
+        """)
         with engine.begin() as connection:
                 result = connection.execute(sql_query, {'name': nombre})
-                print(result.fetchall())
-                # Fetch the result code from the output parameter
-                out_result_code = result.fetchone()[0]
-                for i in result:
-                    print(i)
-                #REVISAR DESPUES
-
+                output = result.fetchone()
+                salario = output.OutPuestoSalario
+        print(salario)
+        return salario
 
     except Exception as e:
             print(f"\n\n\nError: {e}\n\n\n")
