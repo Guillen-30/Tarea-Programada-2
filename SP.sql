@@ -15,6 +15,7 @@ CREATE PROCEDURE [dbo].[InsertarPuesto]
 AS
 BEGIN
 	SET NOCOUNT ON;
+	
 	BEGIN TRY
 	-- ejemplo de ejecucion del SP
 

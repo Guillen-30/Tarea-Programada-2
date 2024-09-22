@@ -112,6 +112,30 @@ def insertar_puesto(engine):
 
         except Exception as e:
             print(f"\n\n\nError: {e}\n\n\n")
+def buscar_puesto(nombre,engine):
+    try:
+        sql_query = text("""
+                    DECLARE @OutResulTCode INT;
+                    DECLARE @OutPuestoSalario MONEY;
+                    EXEC BuscarPuesto 
+                        @Nombre = :name,
+                        @OutPuestoSalario = @OutPuestoSalario OUTPUT,
+                        @OutResulTCode = @OutResulTCode OUTPUT;
+                    SELECT @OutResulTCode;
+                    SELECT @OutPuestoSalario;
+                """)
+        with engine.begin() as connection:
+                result = connection.execute(sql_query, {'name': nombre})
+                print(result.fetchall())
+                # Fetch the result code from the output parameter
+                out_result_code = result.fetchone()[0]
+                for i in result:
+                    print(i)
+                #REVISAR DESPUES
+
+
+    except Exception as e:
+            print(f"\n\n\nError: {e}\n\n\n")
 
 def insertar_error(engine):
         for elemento in error:
@@ -146,7 +170,7 @@ def insertar_error(engine):
             except Exception as e:
                 print(f"\n\n\nError: {e}\n\n\n")
 
-insertar_error(conexion_sql_server())
+buscar_puesto("Camarero",conexion_sql_server())
 
 def get_error_by_code(engine, codigo):
     pass
