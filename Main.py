@@ -168,6 +168,7 @@ def insertar_error(engine):
             except Exception as e:
                 print(f"\n\n\nError: {e}\n\n\n")
 
+
 buscar_puesto("Camarero",conexion_sql_server())
 
 def get_error_by_code(engine, codigo):
