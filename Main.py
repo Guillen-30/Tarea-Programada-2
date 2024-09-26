@@ -167,10 +167,41 @@ def insertar_error(engine):
     
             except Exception as e:
                 print(f"\n\n\nError: {e}\n\n\n")
-
+def insertar_usurario(engine):
+    for elemento in usuarios:
+        print (elemento)
+        Id = elemento['Id']
+        Username = elemento['Nombre']
+        Password = elemento['Pass']
+        
+        try:
+            print("piola")
+            sql_query = text("""
+                DECLARE @OutResulTCode INT;
+                EXEC dbo.InsertarUsuario 
+                    @Username = :Username, 
+                    @Id = :Id,
+                    @Password = :Password, 
+                    @OutResulTCode = @OutResulTCode OUTPUT;
+                SELECT @OutResulTCode;
+            """)
+            with engine.begin() as connection:
+                result = connection.execute(sql_query, {'Id': Id, 'Username': Username, 'Password': Password})
+    
+                    # Fetch the result code from the output parameter
+                out_result_code = result.fetchone()[0]
+    
+                # Log the output result code
+                print(f"Stored Procedure executed. Output Result Code: {out_result_code}")
+                if out_result_code == 0:
+                    print(f"Record for '{Username}' inserted successfully with Id '{Id}'.")
+                else:
+                    print(f"Error inserting record for '{Username}' with Id '{Id}'. Error Code: {out_result_code} Error Message: {error[out_result_code]}")
+        except Exception as e:
+            print(f"\n\n\nError: {e}\n\n\n")             
 
 buscar_puesto("Camarero",conexion_sql_server())
-
+#insertar_usurario(conexion_sql_server())
 def get_error_by_code(engine, codigo):
     pass
     #HACER Y SUSTITUIR EN LINEA 144
