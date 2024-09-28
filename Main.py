@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from datetime import datetime
 
 tree = ET.parse('Datos.xml')
 root = tree.getroot()
@@ -24,6 +25,7 @@ def conexion_sql_server():
 ################## CONEXION SQL ####################git 
 
 
+#llenado de diccionarios de xml
 for child in root:
     if child.tag == 'Movimientos':
         # Recorrer cada nodo 'movimiento' en el nodo 'Movimientos'
@@ -76,9 +78,6 @@ for child in root:
             tipo_evento.append(atributos)
             
 
-
-from sqlalchemy import create_engine, text
-
 def insertar_puesto(engine):
 
     for elemento in puestos:
@@ -112,25 +111,29 @@ def insertar_puesto(engine):
 
         except Exception as e:
             print(f"\n\n\nError: {e}\n\n\n")
+
 def buscar_puesto(nombre,engine):
     try:
         sql_query = text("""
             DECLARE @OutResultCode INT;
             DECLARE @OutPuestoSalario MONEY;
+            DECLARE @OutPuestoId INT;
             
             EXEC BuscarPuesto
                 @Nombre = :name,
                 @OutResultCode = @OutResultCode OUTPUT,
-                @OutPuestoSalario = @OutPuestoSalario OUTPUT;
+                @OutPuestoSalario = @OutPuestoSalario OUTPUT,
+                @OutPuestoId = @OutPuestoId OUTPUT;
             
-            SELECT @OutResultCode AS OutResultCode, @OutPuestoSalario AS OutPuestoSalario;
+            SELECT @OutResultCode AS OutResultCode, @OutPuestoSalario AS OutPuestoSalario, @OutPuestoId AS OutPuestoId;
         """)
         with engine.begin() as connection:
                 result = connection.execute(sql_query, {'name': nombre})
                 output = result.fetchone()
                 salario = output.OutPuestoSalario
-        print(salario)
-        return salario
+                id= output.OutPuestoId
+        salida={'salario':salario,'id':id}
+        return salida
 
     except Exception as e:
             print(f"\n\n\nError: {e}\n\n\n")
@@ -167,6 +170,7 @@ def insertar_error(engine):
     
             except Exception as e:
                 print(f"\n\n\nError: {e}\n\n\n")
+
 def insertar_usurario(engine):
     for elemento in usuarios:
         print (elemento)
@@ -175,7 +179,6 @@ def insertar_usurario(engine):
         Password = elemento['Pass']
         
         try:
-            print("piola")
             sql_query = text("""
                 DECLARE @OutResulTCode INT;
                 EXEC dbo.InsertarUsuario 
@@ -200,8 +203,109 @@ def insertar_usurario(engine):
         except Exception as e:
             print(f"\n\n\nError: {e}\n\n\n")             
 
-buscar_puesto("Camarero",conexion_sql_server())
-#insertar_usurario(conexion_sql_server())
+def insertar_tipo_movimiento(engine):
+    for elemento in tipo_movimiento:
+        print (elemento)
+        Id = elemento['Id']
+        Nombre = elemento['Nombre']
+        TipoAccion = elemento['TipoAccion']
+        
+        try:
+            sql_query = text("""
+                DECLARE @OutResulTCode INT;
+                EXEC dbo.InsertarTipoMovimiento 
+                    @Id = :Id, 
+                    @Nombre = :Nombre,
+                    @TipoAccion = :TipoAccion,
+                    @OutResulTCode = @OutResulTCode OUTPUT;
+                SELECT @OutResulTCode;
+            """)
+            with engine.begin() as connection:
+                result = connection.execute(sql_query, {'Id': Id, 'Nombre': Nombre, 'TipoAccion': TipoAccion})
+    
+                    # Fetch the result code from the output parameter
+                out_result_code = result.fetchone()[0]
+    
+                # Log the output result code
+                print(f"Stored Procedure executed. Output Result Code: {out_result_code}")
+                if out_result_code == 0:
+                    print(f"Record for '{Nombre}' inserted successfully with Id '{Id}'.")
+                else:
+                    print(f"Error inserting record for '{Nombre}' with Id '{Id}'. Error Code: {out_result_code} Error Message: {error[out_result_code]}")
+        except Exception as e:
+            print(f"\n\n\nError: {e}\n\n\n")
+            
+def insertar_tipo_evento(engine):
+    for elemento in tipo_evento:
+        print (elemento)
+        Id = elemento['Id']
+        Nombre = elemento['Nombre']
+        
+        try:
+            sql_query = text("""
+                DECLARE @OutResulTCode INT;
+                EXEC dbo.InsertarTipoEvento 
+                    @Id = :Id, 
+                    @Nombre = :Nombre,
+                    @OutResulTCode = @OutResulTCode OUTPUT;
+                SELECT @OutResulTCode;
+            """)
+            with engine.begin() as connection:
+                result = connection.execute(sql_query, {'Id': Id, 'Nombre': Nombre})
+    
+                    # Fetch the result code from the output parameter
+                out_result_code = result.fetchone()[0]
+    
+                # Log the output result code
+                print(f"Stored Procedure executed. Output Result Code: {out_result_code}")
+                if out_result_code == 0:
+                    print(f"Record for '{Nombre}' inserted successfully with Id '{Id}'.")
+                else:
+                    print(f"Error inserting record for '{Nombre}' with Id '{Id}'. Error Code: {out_result_code} Error Message: {error[out_result_code]}")
+        except Exception as e:
+            print(f"\n\n\nError: {e}\n\n\n")
+
+def insertar_empleado(engine):
+    for elemento in empleados:
+        print (elemento)
+        IdPuesto = buscar_puesto(elemento['Puesto'],engine)
+        print(IdPuesto)
+        ValorDocumentoIdentidad = elemento['ValorDocumentoIdentidad']
+        Nombre = elemento['Nombre']
+        FechaContratacion = elemento['FechaContratacion']
+        
+        try:
+            FechaContratacion_date = datetime.strptime(FechaContratacion, '%Y-%m-%d').date()
+            sql_query = text("""
+                DECLARE @OutResulTCode INT;
+                EXEC dbo.InsertarEmpleado 
+                    @IdPuesto = :IdPuesto, 
+                    @ValorDocumentoIdentidad = :ValorDocumentoIdentidad,
+                    @Nombre = :Nombre,
+                    @FechaContratacion = :FechaContratacion,
+                    @SaldoVacaciones = 0,
+                    @EsActivo = 1,
+                    @OutResulTCode = @OutResulTCode OUTPUT;
+                SELECT @OutResulTCode;
+            """)
+            with engine.begin() as connection:
+                print(IdPuesto['id'], ValorDocumentoIdentidad, Nombre, FechaContratacion)
+                result = connection.execute(sql_query, {'IdPuesto': IdPuesto['id'], 'ValorDocumentoIdentidad': ValorDocumentoIdentidad, 'Nombre': Nombre, 'FechaContratacion': FechaContratacion_date})
+
+                    # Fetch the result code from the output parameter
+                out_result_code = result.fetchone()[0]
+    
+                # Log the output result code
+                print(f"Stored Procedure executed. Output Result Code: {out_result_code}")
+                if out_result_code == 0:
+                    print(f"Record for '{Nombre}' inserted successfully with IdPuesto '{IdPuesto['id']}'.")
+                else:
+                    print(f"Error inserting record for '{Nombre}' with IdPuesto '{IdPuesto['id']}'. Error Code: {out_result_code} Error Message: {error[out_result_code]}")
+        except Exception as e:
+            print(f"\n\n\nError: {e}\n\n\n")
+
 def get_error_by_code(engine, codigo):
     pass
     #HACER Y SUSTITUIR EN LINEA 144
+    
+insertar_empleado(conexion_sql_server())
