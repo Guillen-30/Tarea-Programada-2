@@ -1,0 +1,11 @@
+Plan Insertar Movimiento
+
+idEmpleado=buscarEmpleado(Movimiento[ValorDocId])
+idTipoMovimiento=buscarTipoMovimiento(Movimiento[IdTipoMovimiento])['id'] #Que devuelva un diccionario con id, y TipoAccion
+Fecha=Movimiento[Fecha]
+Monto= -Movimiento[Monto], si buscarTipoMovimiento(Movimiento[IdTipoMovimiento])['TipoAccion']=="Debito", else Movimiento[Monto]
+NuevoSaldo=buscarSaldoEmpleado(Movimiento[ValorDocId])
+
+buscarEmpleado ya esta hecho,
+
+TODO: BuscarTipoMovimiento, insertarMovimiento, y sus respectivos SP
