@@ -112,7 +112,7 @@ def insertar_puesto(engine):
         except Exception as e:
             print(f"\n\n\nError: {e}\n\n\n")
 
-def buscar_puesto(nombre,engine):
+def buscar_puesto(nombre, engine):
     try:
         sql_query = text("""
             DECLARE @OutResultCode INT;
@@ -128,15 +128,25 @@ def buscar_puesto(nombre,engine):
             SELECT @OutResultCode AS OutResultCode, @OutPuestoSalario AS OutPuestoSalario, @OutPuestoId AS OutPuestoId;
         """)
         with engine.begin() as connection:
-                result = connection.execute(sql_query, {'name': nombre})
-                output = result.fetchone()
-                salario = output.OutPuestoSalario
-                id= output.OutPuestoId
-        salida={'salario':salario,'id':id}
-        return salida
+            result = connection.execute(sql_query, {'name': nombre})
+            output = result.fetchone()
+            
+            # Check if the query returned a valid result
+            if output is None:
+                print(f"Error: No result found for job {nombre}.")
+                return None
+
+            salario = output.OutPuestoSalario
+            id = output.OutPuestoId
+            
+            print(f"Found Puesto '{nombre}' with Id '{id}' and Salario '{salario}'.")
+            salida = {'salario': salario, 'id': id}
+            return salida
 
     except Exception as e:
-            print(f"\n\n\nError: {e}\n\n\n")
+        print(f"\n\n\nError in buscar_puesto: {e}\n\n\n")
+        return None
+
 
 def insertar_error(engine):
         for elemento in error:
@@ -267,15 +277,22 @@ def insertar_tipo_evento(engine):
 
 def insertar_empleado(engine):
     for elemento in empleados:
-        print (elemento)
-        IdPuesto = buscar_puesto(elemento['Puesto'],engine)
-        print(IdPuesto)
+        print(elemento)
+        IdPuesto = buscar_puesto(elemento['Puesto'], engine)
+        
+        # Check if IdPuesto is None (indicating a failure to find the job)
+        if IdPuesto is None or 'id' not in IdPuesto:
+            print(f"Skipping employee '{elemento['Nombre']}' because Puesto '{elemento['Puesto']}' was not found.")
+            continue  # Skip to the next employee if no IdPuesto is found
+        
         ValorDocumentoIdentidad = elemento['ValorDocumentoIdentidad']
         Nombre = elemento['Nombre']
         FechaContratacion = elemento['FechaContratacion']
         
         try:
+            # Convert the FechaContratacion to the correct format
             FechaContratacion_date = datetime.strptime(FechaContratacion, '%Y-%m-%d').date()
+            
             sql_query = text("""
                 DECLARE @OutResulTCode INT;
                 EXEC dbo.InsertarEmpleado 
@@ -288,11 +305,17 @@ def insertar_empleado(engine):
                     @OutResulTCode = @OutResulTCode OUTPUT;
                 SELECT @OutResulTCode;
             """)
+            
             with engine.begin() as connection:
                 print(IdPuesto['id'], ValorDocumentoIdentidad, Nombre, FechaContratacion)
-                result = connection.execute(sql_query, {'IdPuesto': IdPuesto['id'], 'ValorDocumentoIdentidad': ValorDocumentoIdentidad, 'Nombre': Nombre, 'FechaContratacion': FechaContratacion_date})
+                result = connection.execute(sql_query, {
+                    'IdPuesto': IdPuesto['id'],
+                    'ValorDocumentoIdentidad': ValorDocumentoIdentidad,
+                    'Nombre': Nombre,
+                    'FechaContratacion': FechaContratacion_date
+                })
 
-                    # Fetch the result code from the output parameter
+                # Fetch the result code from the output parameter
                 out_result_code = result.fetchone()[0]
     
                 # Log the output result code
@@ -301,11 +324,62 @@ def insertar_empleado(engine):
                     print(f"Record for '{Nombre}' inserted successfully with IdPuesto '{IdPuesto['id']}'.")
                 else:
                     print(f"Error inserting record for '{Nombre}' with IdPuesto '{IdPuesto['id']}'. Error Code: {out_result_code} Error Message: {error[out_result_code]}")
+        
         except Exception as e:
             print(f"\n\n\nError: {e}\n\n\n")
+
+def buscar_empleado(engine, documento):
+    try:
+        sql_query = text("""
+            DECLARE @OutResultCode INT;
+            DECLARE @OutEmpleadoId INT;
+            DECLARE @OutEmpleadoIdPuesto INT;
+            DECLARE @OutEmpleadoNombre VARCHAR(256);
+            DECLARE @OutEmpleadoFechaContratacion DATE;
+            DECLARE @OutEmpleadoSaldoVacaciones INT;
+            DECLARE @OutEmpleadoEsActivo BIT;
+            
+            EXEC BuscarEmpleado
+                @ValorDocumentoIdentidad = :documento,
+                @OutResultCode = @OutResultCode OUTPUT,
+                @OutEmpleadoId = @OutEmpleadoId OUTPUT,
+                @OutEmpleadoIdPuesto = @OutEmpleadoIdPuesto OUTPUT,
+                @OutEmpleadoNombre = @OutEmpleadoNombre OUTPUT,
+                @OutEmpleadoFechaContratacion = @OutEmpleadoFechaContratacion OUTPUT,
+                @OutEmpleadoSaldoVacaciones = @OutEmpleadoSaldoVacaciones OUTPUT,
+                @OutEmpleadoEsActivo = @OutEmpleadoEsActivo OUTPUT;
+            
+            SELECT @OutResultCode AS OutResultCode, @OutEmpleadoId AS OutEmpleadoId, @OutEmpleadoNombre AS OutEmpleadoNombre, @OutEmpleadoFechaContratacion AS OutEmpleadoFechaContratacion, @OutEmpleadoSaldoVacaciones AS OutEmpleadoSaldoVacaciones, @OutEmpleadoEsActivo AS OutEmpleadoEsActivo;
+        """)
+        with engine.begin() as connection:
+            result = connection.execute(sql_query, {'documento': documento})
+            output = result.fetchone()
+            
+            # Check if the query returned a valid result
+            if output is None:
+                print(f"Error: No result found for employee with document {documento}.")
+                return None
+
+            id = output.OutEmpleadoId
+            nombre = output.OutEmpleadoNombre
+            fecha_contratacion = output.OutEmpleadoFechaContratacion
+            saldo_vacaciones = output.OutEmpleadoSaldoVacaciones
+            es_activo = output.OutEmpleadoEsActivo
+            
+            print(f"Found Employee '{nombre}' with Id '{id}', FechaContratacion '{fecha_contratacion}', SaldoVacaciones '{saldo_vacaciones}', EsActivo '{es_activo}'.")
+            salida = {'id': id, 'nombre': nombre, 'fecha_contratacion': fecha_contratacion, 'saldo_vacaciones': saldo_vacaciones, 'es_activo': es_activo}
+            print(salida)
+            return salida
+
+    except Exception as e:
+        print(f"\n\n\nError in buscar_empleado: {e}\n\n\n")
+        return None
+
+
 
 def get_error_by_code(engine, codigo):
     pass
     #HACER Y SUSTITUIR EN LINEA 144
     
-insertar_empleado(conexion_sql_server())
+buscar_empleado(conexion_sql_server(), '1011123')
+
