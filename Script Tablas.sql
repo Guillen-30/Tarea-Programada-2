@@ -34,7 +34,7 @@ CREATE TABLE Movimiento (
     [NuevoSaldo] MONEY NOT NULL,
     [IdPostByUser] [int],
     [PostInIP] VARCHAR(16),
-    [PostTime] TIMESTAMP NOT NULL,
+    [PostTime] DATETIME NOT NULL,
     FOREIGN KEY (IdEmpleado) REFERENCES Empleado(Id),
     FOREIGN KEY (IdTipoMovimiento) REFERENCES TipoMovimiento(Id),
 	FOREIGN KEY (IdPostByUser) REFERENCES Usuario(Id)

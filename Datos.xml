@@ -66,6 +66,7 @@
         <empleado Puesto="Albañil" ValorDocumentoIdentidad="9900112" Nombre="Simón García" FechaContratacion="2008-06-27"/>
         <empleado Puesto="Fontanero" ValorDocumentoIdentidad="1011123" Nombre="Clara Montalvo" FechaContratacion="2016-09-27"/>
         <empleado Puesto="Cuidador" ValorDocumentoIdentidad="2131415" Nombre="Ricardo Núñez" FechaContratacion="2007-10-19"/> 
+		<empleado Puesto="Marihuano" ValorDocumentoIdentidad="2131415" Nombre="Paco Perez" FechaContratacion="2007-10-19"/>
     </Empleados> 
     <Usuarios> 
         <usuario Id="1" Nombre="UsuarioScripts" Pass="UsuarioScripts"/> 

@@ -1,5 +1,10 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime
+import pandas as pd
+from sqlalchemy import create_engine, text
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+import socket
 
 tree = ET.parse('Datos.xml')
 root = tree.getroot()
@@ -13,10 +18,7 @@ usuarios = []
 error = [] #
 
 ################### CONNEXION SQL ##################
-import pandas as pd
-from sqlalchemy import create_engine, text
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+
 
 def conexion_sql_server():
     connection_string = 'mssql+pyodbc://sa:BasesTec@25.8.143.41/Tarea Programada 2?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes'
@@ -147,7 +149,6 @@ def buscar_puesto(nombre, engine):
         print(f"\n\n\nError in buscar_puesto: {e}\n\n\n")
         return None
 
-
 def insertar_error(engine):
         for elemento in error:
             codigo = elemento['Codigo']
@@ -277,11 +278,12 @@ def insertar_tipo_evento(engine):
 
 def insertar_empleado(engine):
     for elemento in empleados:
-        print(elemento)
+        print(f"INSERTAR:{elemento}")
         IdPuesto = buscar_puesto(elemento['Puesto'], engine)
+        print(f"INSERTAR:{IdPuesto}")
         
         # Check if IdPuesto is None (indicating a failure to find the job)
-        if IdPuesto is None or 'id' not in IdPuesto:
+        if IdPuesto['id'] is None:
             print(f"Skipping employee '{elemento['Nombre']}' because Puesto '{elemento['Puesto']}' was not found.")
             continue  # Skip to the next employee if no IdPuesto is found
         
@@ -357,7 +359,6 @@ def buscar_empleado(engine, documento):
             
             # Check if the query returned a valid result
             if output is None:
-                print(f"Error: No result found for employee with document {documento}.")
                 return None
 
             id = output.OutEmpleadoId
@@ -366,21 +367,135 @@ def buscar_empleado(engine, documento):
             saldo_vacaciones = output.OutEmpleadoSaldoVacaciones
             es_activo = output.OutEmpleadoEsActivo
             
-            print(f"Found Employee '{nombre}' with Id '{id}', FechaContratacion '{fecha_contratacion}', SaldoVacaciones '{saldo_vacaciones}', EsActivo '{es_activo}'.")
             salida = {'id': id, 'nombre': nombre, 'fecha_contratacion': fecha_contratacion, 'saldo_vacaciones': saldo_vacaciones, 'es_activo': es_activo}
-            print(salida)
             return salida
 
     except Exception as e:
-        print(f"\n\n\nError in buscar_empleado: {e}\n\n\n")
+        print(f"\n\n\nBUSCAR:Error in buscar_empleado: {e}\n\n\n")
+        return None
+
+def buscar_tipo_movimiento(engine, nombre):
+    try:
+        sql_query = text("""
+            DECLARE @OutResultCode INT;
+            DECLARE @OutTipoMovimientoId INT;
+            DECLARE @OutTipoMovimientoTipoAccion VARCHAR(256);
+            
+            EXEC BuscarTipoMovimiento
+                @Nombre = :nombre,
+                @OutResultCode = @OutResultCode OUTPUT,
+                @OutTipoMovimientoId = @OutTipoMovimientoId OUTPUT,
+                @OutTipoMovimientoTipoAccion = @OutTipoMovimientoTipoAccion OUTPUT;
+            
+            SELECT @OutResultCode AS OutResultCode, @OutTipoMovimientoId AS OutTipoMovimientoId, @OutTipoMovimientoTipoAccion AS OutTipoMovimientoTipoAccion;
+        """)
+        with engine.begin() as connection:
+            result = connection.execute(sql_query, {'nombre': nombre})
+            output = result.fetchone()
+            
+            # Check if the query returned a valid result
+            if output is None:
+                return None
+
+            id = output.OutTipoMovimientoId
+            tipo_accion = output.OutTipoMovimientoTipoAccion
+            
+            salida = {'id': id, 'tipo_accion': tipo_accion}
+            return salida
+
+    except Exception as e:
+        print(f"\n\n\nError in buscarTipoMovimiento: {e}\n\n\n")
         return None
 
 
+def buscar_user(engine, username):
+    try:
+        sql_query = text("""
+            DECLARE @OutResultCode INT;
+            DECLARE @OutUserId INT;
+            DECLARE @OutUserPass VARCHAR(256);
+            
+            EXEC BuscarUsuario
+                @Username = :username,
+                @OutResultCode = @OutResultCode OUTPUT,
+                @OutUserId = @OutUserId OUTPUT,
+                @OutUserPass = @OutUserPass OUTPUT;
+            
+            SELECT @OutResultCode AS OutResultCode, @OutUserId AS OutUsuarioId, @OutUserPass AS OutUsuarioPassword;
+        """)
+        with engine.begin() as connection:
+            result = connection.execute(sql_query, {'username': username})
+            output = result.fetchone()
+            
+            # Check if the query returned a valid result
+            if output is None:
+                return None
 
-def get_error_by_code(engine, codigo):
-    pass
-    #HACER Y SUSTITUIR EN LINEA 144
+            id = output.OutUsuarioId
+            password = output.OutUsuarioPassword
+            
+            salida = {'id': id, 'password': password}
+            return salida
+
+    except Exception as e:
+        print(f"\n\n\nError in buscarUser: {e}\n\n\n")
+        return None
+
+def insertar_movimiento(engine):
+    for elemento in movimientos:
+        print(f"INSERTAR:{elemento}")
+        id_empleado = buscar_empleado(engine, elemento['ValorDocId'])['id']
+        id_tipo_movimiento = buscar_tipo_movimiento(engine, elemento['IdTipoMovimiento'])['id']
+        fecha = elemento['Fecha']
+        tipo_accion=buscar_tipo_movimiento(conexion_sql_server(),elemento['IdTipoMovimiento'])
+        if tipo_accion['tipo_accion']=="Debito":
+            monto=-1*elemento['Monto']
+        else:
+            monto=elemento['Monto']
+        if monto!='':
+            nuevo_saldo=buscar_empleado(engine, elemento['ValorDocId'])['saldo_vacaciones']+int(monto)
+        idPostByUser=buscar_user(conexion_sql_server(),elemento['PostByUser'])["id"]
+        PostInIP=elemento["PostInIP"]
+        PostTime=elemento["PostTime"]
+
+        try:
+            sql_query = text("""
+                DECLARE @OutResulTCode INT;
+                EXEC dbo.InsertarMovimiento 
+                    @IdEmpleado = :IdEmpleado, 
+                    @IdTipoMovimiento = :IdTipoMovimiento,
+                    @Fecha = :Fecha,
+                    @Monto = :Monto,
+                    @NuevoSaldo = :NuevoSaldo,
+                    @IdPostByUser = :IdPostByUser,
+                    @PostInIP = :PostInIP,
+                    @PostTime = :PostTime,
+                    @OutResulTCode = @OutResulTCode OUTPUT;
+                SELECT @OutResulTCode
+            """)
+            with engine.begin() as connection:
+                result = connection.execute(sql_query, {'IdEmpleado': id_empleado, "IdTipoMovimiento":id_tipo_movimiento, "Fecha":fecha, "Monto":monto, "NuevoSaldo":nuevo_saldo, "IdPostByUser":idPostByUser, "PostInIP":PostInIP, "PostTime":PostTime})
+                print(id_empleado, id_tipo_movimiento, fecha, monto, nuevo_saldo, idPostByUser, PostInIP, PostTime)
+                    # Fetch the result code from the output parameter
+                out_result_code = result.fetchone()[0]
     
-buscar_empleado(conexion_sql_server(), '1011123')
+                # Log the output result code
+                print(f"Stored Procedure executed. Output Result Code: {out_result_code}")
+                if out_result_code == 0:
+                    print(f"Record for '{id_tipo_movimiento}' inserted successfully with Id '{id_empleado}'.")
+                else:
+                    print(f"Error inserting record for '{id_tipo_movimiento}' with Id '{id_empleado}'. Error Code: {out_result_code} Error Message: {error[out_result_code]}")
+        except Exception as e:
+            print(f"INSERTAR:\n\n\nError: {e}\n\n\n")
 
+        
+
+
+#Se va a usar para cuando se inserte un movimiento desde la UI
+def get_current_ip():
+    hostname = socket.gethostname()
+    ip_address = socket.gethostbyname(hostname)
+    return ip_address
+
+insertar_movimiento(conexion_sql_server())
 #TODO: 
