@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 from sqlalchemy import create_engine, text
 from flask import Flask, jsonify, request
@@ -497,5 +497,56 @@ def get_current_ip():
     ip_address = socket.gethostbyname(hostname)
     return ip_address
 
-insertar_movimiento(conexion_sql_server())
-#TODO: 
+###WEB APP
+app = Flask(__name__)
+CORS(app)
+# Dictionary to track failed login attempts
+failed_attempts = {}
+
+# Connection to SQL Server
+def conexion_sql_server():
+    connection_string = 'mssql+pyodbc://sa:BasesTec@25.8.143.41/Tarea Programada 2?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes'
+    engine = create_engine(connection_string)
+    return engine
+
+# Login route
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data['username']
+    password = data['password']
+    print (username, password)
+    engine = conexion_sql_server()
+    current_time = datetime.now()
+
+    # Check if the user is locked out
+    if username in failed_attempts:
+        attempts, lock_time = failed_attempts[username]
+        if attempts >= 5 and current_time < lock_time:
+            return jsonify({"message": f"Account locked. Try again after {lock_time}"}), 403
+
+    # Query user from the database
+    user=buscar_user(engine, username)
+
+    # If user not found or password incorrect
+    if not user or user['password'] != password:
+        # Increment failed attempts or add user to failed_attempts
+        if username not in failed_attempts:
+            failed_attempts[username] = [1, current_time]
+        else:
+            failed_attempts[username][0] += 1
+        
+        # Lock the account if 5 failed attempts
+        if failed_attempts[username][0] >= 5:
+            failed_attempts[username][1] = current_time + timedelta(minutes=30)
+            return jsonify({"message": "Too many failed attempts. Account locked for 30 minutes."}), 403
+        return jsonify({"message": "Invalid username or password"}), 401
+    
+    # Successful login
+    if username in failed_attempts:
+        del failed_attempts[username]  # Reset failed attempts on successful login
+
+    return jsonify({"message": "Login successful!"}), 200
+
+if __name__ == '__main__':
+    app.run(debug=True)

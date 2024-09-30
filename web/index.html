@@ -9,15 +9,49 @@
 <body>
     <div class="login-container">
         <h1>Iniciar Sesión</h1>
-        <form action="empleados.html" method="POST">
+        <form action="/login" method="POST" id="loginForm">
             <label for="username">Usuario:</label>
             <input type="text" id="username" name="username" placeholder="Ingrese su usuario" required>
-            
+        
             <label for="password">Contraseña:</label>
             <input type="password" id="password" name="password" placeholder="Ingrese su contraseña" required>
-            
+        
             <button type="submit">Login</button>
         </form>
+        
+        <script>
+            const form = document.getElementById('loginForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData);
+                
+                const response = await fetch('http://127.0.0.1:5000/login', {  // Make sure the port matches your Flask server
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    const result = await response.text();
+                    console.error(result);
+                    alert(result);
+                    return;
+                }
+        
+                const result = await response.json();
+                alert(result.message);  // Handle success or failure
+                console.log(result.message);
+                if (result.message === 'Login successful!') {
+                    console.log('Redirecting...');
+                    window.location.href = 'empleados.html';  // Redirect to the home page
+                }
+            });
+        </script>
+        
+        
     </div>
 </body>
 </html>
