@@ -44,9 +44,9 @@
                 const row = document.createElement('tr');
 
                 row.innerHTML = `
-                    <td>${employee.Nombre}</td>
-                    <td>${employee.DocumentoIdentidad}</td>
-                    <td>${employee.Puesto}</td>
+                    <td>${employee[0]}</td>
+                    <td>${employee[1]}</td>
+                    <td>${employee[2]}</td>
                     <td>
                         <a href="editar-empleado.html">Editar</a> | 
                         <a href="movimientos.html">Ver Movimientos</a>
