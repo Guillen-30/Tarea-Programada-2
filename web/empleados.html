@@ -23,30 +23,42 @@
                     <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Placeholder data -->
-                <tr>
-                    <td>Kaitlyn Jensen</td>
-                    <td>6993943</td>
-                    <td>Camarero</td>
-                    <td>
-                        <a href="editar-empleado.html">Editar</a> | 
-                        <a href="movimientos.html">Ver Movimientos</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Robert Buchanan</td>
-                    <td>1896802</td>
-                    <td>Albañil</td>
-                    <td>
-                        <a href="editar-empleado.html">Editar</a> | 
-                        <a href="movimientos.html">Ver Movimientos</a>
-                    </td>
-                </tr>
+            <tbody id="employeeTableBody">
+                <!-- Employee data will be dynamically inserted here -->
             </tbody>
         </table>
-
-        <a href="insertar-empleado.html" class="button">Insertar Empleado</a>
     </div>
+
+    <a href="insertar-empleado.html" class="button">Insertar Empleado</a>
+
+    <script>
+        // Function to fetch employee data and populate the table
+        async function loadEmployees() {
+            const response = await fetch('http://127.0.0.1:5000/empleados');  // Adjust port if needed
+            const employees = await response.json();
+
+            const tableBody = document.getElementById('employeeTableBody');
+            tableBody.innerHTML = '';  // Clear existing rows
+            console.log(employees);
+            employees.forEach(employee => {
+                const row = document.createElement('tr');
+
+                row.innerHTML = `
+                    <td>${employee.Nombre}</td>
+                    <td>${employee.DocumentoIdentidad}</td>
+                    <td>${employee.Puesto}</td>
+                    <td>
+                        <a href="editar-empleado.html">Editar</a> | 
+                        <a href="movimientos.html">Ver Movimientos</a>
+                    </td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Call the function to load employees when the page loads
+        window.onload = loadEmployees;
+    </script>
 </body>
 </html>

@@ -149,6 +149,40 @@ def buscar_puesto(nombre, engine):
         print(f"\n\n\nError in buscar_puesto: {e}\n\n\n")
         return None
 
+def buscar_puesto_id(id, engine):
+    try:
+        sql_query = text("""
+            DECLARE @OutResultCode INT;
+            DECLARE @OutPuestoSalario MONEY;
+            DECLARE @OutPuestoNombre VARCHAR(256);
+            
+            EXEC BuscarPuestoId
+                @IdPuesto = :id,
+                @OutResultCode = @OutResultCode OUTPUT,
+                @OutPuestoSalario = @OutPuestoSalario OUTPUT,
+                @OutPuestoNombre = @OutPuestoNombre OUTPUT;
+            
+            SELECT @OutResultCode AS OutResultCode, @OutPuestoSalario AS OutPuestoSalario, @OutPuestoNombre AS OutPuestoNombre;
+        """)
+        with engine.begin() as connection:
+            result = connection.execute(sql_query, {'id': id})
+            output = result.fetchone()
+            
+            # Check if the query returned a valid result
+            if output is None:
+                print(f"Error: No result found for job with Id {id}.")
+                return None
+
+            salario = output.OutPuestoSalario
+            nombre = output.OutPuestoNombre
+            
+            salida = {'salario': salario, 'nombre': nombre}
+            return salida
+
+    except Exception as e:
+        print(f"\n\n\nError in buscar_puesto_id: {e}\n\n\n")
+        return None
+    
 def insertar_error(engine):
         for elemento in error:
             codigo = elemento['Codigo']
@@ -407,7 +441,6 @@ def buscar_tipo_movimiento(engine, nombre):
         print(f"\n\n\nError in buscarTipoMovimiento: {e}\n\n\n")
         return None
 
-
 def buscar_user(engine, username):
     try:
         sql_query = text("""
@@ -547,6 +580,24 @@ def login():
         del failed_attempts[username]  # Reset failed attempts on successful login
 
     return jsonify({"message": "Login successful!"}), 200
+
+@app.route('/empleados', methods=['GET'])
+def get_empleados():
+    engine = conexion_sql_server()
+    sql_query = text("""
+                     DECLARE @OutResulTCode INT;
+                     EXEC FetchEmpleados
+                     @OutResulTCode = @OutResulTCode OUTPUT;
+                     """)  # Modify with your actual table structure
+    with engine.connect() as conn:
+        result = conn.execute(sql_query)
+        empleados_fetch = list(result.all())
+        for i,empleado in enumerate(empleados_fetch):
+            empleados_fetch[i]=list(empleado)
+            empleados_fetch[i][2]=buscar_puesto_id(empleado[2],engine)["nombre"]
+
+    return jsonify(empleados_fetch), 200
+
 
 if __name__ == '__main__':
     app.run(debug=True)
