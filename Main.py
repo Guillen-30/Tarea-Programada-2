@@ -584,17 +584,21 @@ def login():
 @app.route('/empleados', methods=['GET'])
 def get_empleados():
     engine = conexion_sql_server()
+    filter_value = request.args.get('filter', '')  # Get the filter input from the query string
+
     sql_query = text("""
-                     DECLARE @OutResulTCode INT;
-                     EXEC FetchEmpleados
-                     @OutResulTCode = @OutResulTCode OUTPUT;
-                     """)  # Modify with your actual table structure
+        DECLARE @OutResulTCode INT;
+        EXEC FetchEmpleados
+        @Filter = :filter,  
+        @OutResulTCode = @OutResulTCode OUTPUT;
+    """)
+
     with engine.connect() as conn:
-        result = conn.execute(sql_query)
+        result = conn.execute(sql_query, {'filter': filter_value})
         empleados_fetch = list(result.all())
-        for i,empleado in enumerate(empleados_fetch):
-            empleados_fetch[i]=list(empleado)
-            empleados_fetch[i][2]=buscar_puesto_id(empleado[2],engine)["nombre"]
+        for i, empleado in enumerate(empleados_fetch):
+            empleados_fetch[i] = list(empleado)
+            empleados_fetch[i][2] = buscar_puesto_id(empleado[2], engine)["nombre"]
 
     return jsonify(empleados_fetch), 200
 

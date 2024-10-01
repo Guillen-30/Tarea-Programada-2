@@ -4,3 +4,12 @@ TODO:
 
 Cambiar SP insertarMovimiento para que cambie el saldoVacaciones del empleado por NuevoSaldo
 get_error_by_code
+
+Idea:
+
+select [Nombre]
+		,[ValorDocumentoIdentidad]
+		,[IdPuesto]
+		FROM dbo.Empleado
+if nombre != ''
+where ([nombre]LIKE '%' + @input + '%') or ([ValorDocumentoIdentidad]LIKE '%' + @input + '%') 
