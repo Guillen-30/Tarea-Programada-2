@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Movimientos de Kaitlyn Jensen</h1>
+        <h1>Movimientos del Empleado</h1>
         <table>
             <thead>
                 <tr>
@@ -18,18 +18,43 @@
                     <th>Nuevo Saldo</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>2024-01-18</td>
-                    <td>Venta de vacaciones</td>
-                    <td>2</td>
-                    <td>8</td>
-                </tr>
-                <!-- Placeholder para más movimientos -->
+            <tbody id="movimientosTableBody">
+                <!-- Los movimientos serán insertados dinámicamente aquí -->
             </tbody>
         </table>
 
         <a href="insertar-movimiento.html" class="button">Insertar Movimiento</a>
     </div>
+
+    <script>
+        // On page load, fetch movements based on the employee's ID passed in the URL
+        window.onload = async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const idEmpleado = urlParams.get('idEmpleado');
+
+            if (!idEmpleado) {
+                alert('No se encontró el Id del empleado');
+                return;
+            }
+
+            // Fetch movimientos for the specific employee
+            const response = await fetch(`http://127.0.0.1:5000/movimientos?idEmpleado=${idEmpleado}`);
+            const movimientos = await response.json();
+
+            const tableBody = document.getElementById('movimientosTableBody');
+            tableBody.innerHTML = '';  // Clear existing rows
+
+            movimientos.forEach(movimiento => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${movimiento[0].slice(0,14)}</td>
+                    <td>${movimiento[1]}</td>
+                    <td>${movimiento[2]}</td>
+                    <td>${movimiento[3]}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+    </script>
 </body>
 </html>

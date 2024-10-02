@@ -441,6 +441,39 @@ def buscar_tipo_movimiento(engine, nombre):
         print(f"\n\n\nError in buscarTipoMovimiento: {e}\n\n\n")
         return None
 
+def buscar_tipo_movimiento_id(engine, id):
+    try:
+        sql_query = text("""
+            DECLARE @OutResultCode INT;
+            DECLARE @OutTipoMovimientoNombre VARCHAR(256);
+            DECLARE @OutTipoMovimientoTipoAccion VARCHAR(256);
+            
+            EXEC BuscarTipoMovimientoId
+                @IdTipoMovimiento = :id,
+                @OutResultCode = @OutResultCode OUTPUT,
+                @OutTipoMovimientoNombre = @OutTipoMovimientoNombre OUTPUT,
+                @OutTipoMovimientoTipoAccion = @OutTipoMovimientoTipoAccion OUTPUT;
+            
+            SELECT @OutResultCode AS OutResultCode, @OutTipoMovimientoNombre AS OutTipoMovimientoNombre, @OutTipoMovimientoTipoAccion AS OutTipoMovimientoTipoAccion;
+        """)
+        with engine.begin() as connection:
+            result = connection.execute(sql_query, {'id': id})
+            output = result.fetchone()
+            
+            # Check if the query returned a valid result
+            if output is None:
+                return None
+
+            nombre = output.OutTipoMovimientoNombre
+            tipo_accion = output.OutTipoMovimientoTipoAccion
+            
+            salida = {'nombre': nombre, 'tipo_accion': tipo_accion}
+            return salida
+
+    except Exception as e:
+        print(f"\n\n\nError in buscarTipoMovimientoId: {e}\n\n\n")
+        return None
+
 def buscar_user(engine, username):
     try:
         sql_query = text("""
@@ -522,7 +555,14 @@ def insertar_movimiento(engine):
             print(f"INSERTAR:\n\n\nError: {e}\n\n\n")
 
         
-
+def cargar_datos(engine):
+    insertar_puesto(engine)
+    insertar_error(engine)
+    insertar_usurario(engine)
+    insertar_tipo_movimiento(engine)
+    insertar_tipo_evento(engine)
+    insertar_empleado(engine)
+    insertar_movimiento(engine)
 
 #Se va a usar para cuando se inserte un movimiento desde la UI
 def get_current_ip():
@@ -598,10 +638,32 @@ def get_empleados():
         empleados_fetch = list(result.all())
         for i, empleado in enumerate(empleados_fetch):
             empleados_fetch[i] = list(empleado)
-            empleados_fetch[i][2] = buscar_puesto_id(empleado[2], engine)["nombre"]
-
+            empleados_fetch[i][3] = buscar_puesto_id(empleado[3], engine)["nombre"]
     return jsonify(empleados_fetch), 200
 
+@app.route('/movimientos', methods=['GET'])
+def get_movimientos():
+    id_empleado = request.args.get('idEmpleado', None)
+
+    if not id_empleado:
+        return jsonify({"message": "IdEmpleado is required"}), 400
+
+    engine = conexion_sql_server()
+    sql_query = text("""
+        DECLARE @OutResulTCode INT;
+        EXEC FetchMovimientosEmpleado
+        @IdEmpleado = :idEmpleado,
+        @OutResulTCode = @OutResulTCode OUTPUT;
+    """)
+
+    with engine.connect() as conn:
+        result = conn.execute(sql_query, {'idEmpleado': id_empleado})
+        movimientos_fetch = list(result.all())
+        for i, movimiento in enumerate(movimientos_fetch):
+            movimientos_fetch[i] = list(movimiento)
+            movimientos_fetch[i][1] = buscar_tipo_movimiento_id(engine, movimiento[1])["tipo_accion"]
+
+    return jsonify(movimientos_fetch), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

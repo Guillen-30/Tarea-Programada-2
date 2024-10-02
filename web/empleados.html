@@ -45,12 +45,12 @@
                 const row = document.createElement('tr');
     
                 row.innerHTML = `
-                    <td>${employee[0]}</td>
                     <td>${employee[1]}</td>
                     <td>${employee[2]}</td>
+                    <td>${employee[3]}</td>
                     <td>
                         <a href="editar-empleado.html">Editar</a> | 
-                        <a href="movimientos.html">Ver Movimientos</a>
+                        <a href="movimientos.html?idEmpleado=${employee[0]}">Ver Movimientos</a>
                     </td>
                 `;
     
