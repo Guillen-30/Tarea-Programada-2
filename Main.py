@@ -665,5 +665,114 @@ def get_movimientos():
 
     return jsonify(movimientos_fetch), 200
 
+@app.route('/empleado', methods=['GET'])
+def get_empleado():
+    id_empleado = request.args.get('idEmpleado')
+
+    if not id_empleado:
+        return jsonify({"message": "IdEmpleado is required"}), 400
+
+    engine = conexion_sql_server()
+    sql_query = text("""
+                    DECLARE @OutResultCode INT;
+                    DECLARE @OutEmpleadoId INT;
+                    DECLARE @OutEmpleadoIdPuesto INT;
+                    DECLARE @OutEmpleadoNombre VARCHAR(256);
+                    DECLARE @OutEmpleadoFechaContratacion DATE;
+                    DECLARE @OutEmpleadoSaldoVacaciones INT;
+                    DECLARE @OutEmpleadoEsActivo BIT;
+                    DECLARE @OutValorDocumentoIdentidad NVARCHAR(64); 
+                     
+                    EXEC BuscarEmpleadoId
+                        @Id = :id_empleado,
+                        @OutResultCode = @OutResultCode OUTPUT,
+                        @OutEmpleadoId = @OutEmpleadoId OUTPUT,
+                        @OutEmpleadoIdPuesto = @OutEmpleadoIdPuesto OUTPUT,
+                        @OutEmpleadoNombre = @OutEmpleadoNombre OUTPUT,
+                        @OutEmpleadoFechaContratacion = @OutEmpleadoFechaContratacion OUTPUT,
+                        @OutEmpleadoSaldoVacaciones = @OutEmpleadoSaldoVacaciones OUTPUT,
+                        @OutEmpleadoEsActivo = @OutEmpleadoEsActivo OUTPUT,
+                        @OutValorDocumentoIdentidad = @OutValorDocumentoIdentidad OUTPUT;
+
+                   
+                    SELECT @OutResultCode AS OutResultCode, 
+                        @OutEmpleadoId AS OutEmpleadoId, 
+                        @OutEmpleadoIdPuesto AS OutEmpleadoIdPuesto,
+                        @OutEmpleadoNombre AS OutEmpleadoNombre, 
+                        @OutEmpleadoFechaContratacion AS OutEmpleadoFechaContratacion, 
+                        @OutEmpleadoSaldoVacaciones AS OutEmpleadoSaldoVacaciones, 
+                        @OutEmpleadoEsActivo AS OutEmpleadoEsActivo,
+                        @OutValorDocumentoIdentidad AS OutValorDocumentoIdentidad;
+
+    """)
+
+    with engine.connect() as conn:
+        result = conn.execute(sql_query, {'id_empleado': id_empleado})
+        empleado = result.fetchone()
+
+    sql_query_puestos = text("""
+                             DECLARE @OutResultCode INT;
+                             EXEC FetchPuestos
+                             @OutResultCode = @OutResultCode OUTPUT;""")
+    with engine.connect() as conn:
+        result = conn.execute(sql_query_puestos)
+        puestos_list=list(result.fetchall())
+        for i, puesto in enumerate(puestos_list):
+            puestos_list[i] = list(puesto)
+        print(puestos_list)
+
+    if empleado:
+        return jsonify({
+            'Nombre': empleado[3],
+            'ValorDocumentoIdentidad': empleado[7],
+            'IdPuesto': empleado[2],
+            'Puestos': puestos_list,
+            'PuestoActual': buscar_puesto_id(empleado[2], engine)["nombre"]
+        }), 200
+    else:
+        return jsonify({"message": "Empleado no encontrado"}), 404
+
+@app.route('/editar-empleado', methods=['POST'])
+def update_empleado():
+    data = request.json
+    id_empleado = int(data['idEmpleado'])
+    documento = data['documento']
+    nombre = data['nombre']
+    id_puesto = int(data['puesto'])
+
+    print(type(id_empleado), type(documento), type(nombre), type(id_puesto))
+
+
+    engine = conexion_sql_server()
+    sql_query = text("""
+        DECLARE @OutResultCode INT;
+
+        EXEC UpdateEmpleado @idPuesto=:id_puesto
+        ,@ValorDocumentoIdentidad=:documento
+        ,@Nombre=:nombre
+        ,@Id=:id_empleado
+        ,@OutResultCode=@OutResultCode OUTPUT;
+
+        SELECT @OutResultCode as Code
+
+    """)
+
+    with engine.connect() as conn:
+        result = conn.execute(sql_query, {
+            'id_empleado': id_empleado,
+            'documento': documento,
+            'nombre': nombre,
+            'id_puesto': id_puesto
+        })
+        out_result_code = result.fetchone()[0]
+        conn.commit()
+    print(out_result_code)
+    if out_result_code == 0:
+        return jsonify({"message": "Empleado actualizado con éxito"}), 200
+    else:
+        return jsonify({"message": "Error al actualizar el empleado"}), 400
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)

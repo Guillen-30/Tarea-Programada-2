@@ -11,16 +11,14 @@
         <h1>Editar Empleado</h1>
         <form action="#" method="POST">
             <label for="documento">Documento de Identidad:</label>
-            <input type="text" id="documento" name="documento" value="6993943" required>
+            <input type="number" id="documento" name="documento" placeholder="Valor Documento Identidad" required>
 
             <label for="nombre">Nombre:</label>
-            <input type="text" id="nombre" name="nombre" value="Kaitlyn Jensen" required>
+            <input type="text" id="nombre" name="nombre" placeholder="Nombre" required maxlength="50">
 
             <label for="puesto">Puesto:</label>
             <select id="puesto" name="puesto">
-                <option value="cajero">Cajero</option>
-                <option value="camarero" selected>Camarero</option>
-                <!-- Más puestos -->
+                <option value="" disabled selected>Seleccione un puesto</option>
             </select>
 
             <button type="submit">Guardar Cambios</button>
@@ -30,5 +28,60 @@
             <button type="submit" class="delete-button">Eliminar Empleado</button>
         </form>
     </div>
+    <script>
+        // Function to load the employee data for editing
+        window.onload = async function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const idEmpleado = urlParams.get('idEmpleado');
+    
+            if (!idEmpleado) {
+                alert('No se encontró el Id del empleado');
+                return;
+            }
+    
+            // Fetch employee data based on the idEmpleado
+            const response = await fetch(`http://127.0.0.1:5000/empleado?idEmpleado=${idEmpleado}`);
+            const data = await response.json();
+    
+            // Populate the form with employee data
+            document.getElementById('documento').value = data.ValorDocumentoIdentidad;
+            document.getElementById('nombre').value = data.Nombre;
+            document.getElementById('puesto').value = data.IdPuesto;  // Assuming IdPuesto corresponds to the select options
+            data.Puestos.forEach(puesto => {
+                const option = document.createElement('option');
+                option.value = puesto[0];
+                option.textContent = puesto[1];
+                document.getElementById('puesto').appendChild(option);
+                if (puesto[0] === data.IdPuesto) {
+                    option.selected = true;
+                }
+            });
+        };
+    
+        // Function to handle form submission for updating the employee
+        document.querySelector('form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+    
+            const idEmpleado = new URLSearchParams(window.location.search).get('idEmpleado');
+            const documento = document.getElementById('documento').value;
+            const nombre = document.getElementById('nombre').value;
+            const puesto = document.getElementById('puesto').value;
+    
+            // Send the updated employee data to the back-end
+            const response = await fetch(`http://127.0.0.1:5000/editar-empleado`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idEmpleado, documento, nombre, puesto })
+            });
+    
+            const result = await response.json();
+            console.log(result);
+            alert(result.message);
+            if (result.message === 'Empleado actualizado con éxito') {
+                    console.log('Redirecting...');
+                    window.location.href = 'empleados.html'}
+            
+        });
+    </script>
 </body>
 </html>
