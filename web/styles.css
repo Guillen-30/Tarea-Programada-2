@@ -99,3 +99,51 @@ table {
     width: 100%;
     border-collapse: collapse;
 }
+
+        /* Container styling */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            margin-top: 5%;
+
+        }
+
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        table th, table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* Scrollable tbody */
+        table tbody {
+            display: block;
+            height: 500px; /* Set a fixed height */
+            overflow-y: scroll; /* Enable vertical scroll */
+            overflow-x: hidden; /* Hide the horizontal scroll */
+            width: 100%;
+        }
+
+        table thead, table tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed; /* Ensures column width consistency */
+        }
+
+        /* Optional: For better visibility while scrolling */
+        table tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }

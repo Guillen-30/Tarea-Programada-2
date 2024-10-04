@@ -637,7 +637,11 @@ def get_empleados():
         result = conn.execute(sql_query, {'filter': filter_value})
         empleados_fetch = list(result.all())
         for i, empleado in enumerate(empleados_fetch):
+            if not empleado[4]:
+                empleados_fetch.pop(i)
+        for i, empleado in enumerate(empleados_fetch):
             empleados_fetch[i] = list(empleado)
+            print(empleado)
             empleados_fetch[i][3] = buscar_puesto_id(empleado[3], engine)["nombre"]
     return jsonify(empleados_fetch), 200
 
@@ -719,7 +723,6 @@ def get_empleado():
         puestos_list=list(result.fetchall())
         for i, puesto in enumerate(puestos_list):
             puestos_list[i] = list(puesto)
-        print(puestos_list)
 
     if empleado:
         return jsonify({
@@ -771,6 +774,90 @@ def update_empleado():
         return jsonify({"message": "Empleado actualizado con éxito"}), 200
     else:
         return jsonify({"message": "Error al actualizar el empleado"}), 400
+
+@app.route('/eliminar-empleado', methods=['POST'])
+def delete_empleado():
+    data = request.json
+    id_empleado = int(data['idEmpleado'])
+
+    engine = conexion_sql_server()
+    sql_query = text("""
+        DECLARE @OutResultCode INT;
+
+        EXEC EliminarEmpleado @Id=:id_empleado
+        ,@OutResultCode=@OutResultCode OUTPUT;
+
+        SELECT @OutResultCode as Code
+
+    """)
+
+    with engine.connect() as conn:
+        result = conn.execute(sql_query, {
+            'id_empleado': id_empleado
+        })
+        out_result_code = result.fetchone()[0]
+        conn.commit()
+
+    if out_result_code == 0:
+        return jsonify({"message": "Empleado eliminado con éxito"}), 200
+    else:
+        return jsonify({"message": "Error al eliminar el empleado"}), 400
+
+@app.route('/puestos', methods=['GET'])
+def get_puestos():
+    engine = conexion_sql_server()
+    sql_query = text("""
+        DECLARE @OutResulTCode INT;
+        EXEC FetchPuestos
+        @OutResulTCode = @OutResulTCode OUTPUT;
+    """)
+
+    with engine.connect() as conn:
+        result = conn.execute(sql_query)
+        puestos_list=list(result.fetchall())
+        for i, puesto in enumerate(puestos_list):
+            puestos_list[i] = list(puesto)
+    
+    return jsonify(puestos_list), 200
+
+
+@app.route('/insertar-empleado', methods=['POST'])
+def insertar_empleado():
+    data = request.json
+    documento = data['documento']
+    nombre = data['nombre']
+    id_puesto = data['puesto']
+
+    engine = conexion_sql_server()
+    sql_query = text("""
+        DECLARE @OutResulTCode INT;
+        EXEC dbo.InsertarEmpleado 
+            @IdPuesto = :id_puesto,
+            @ValorDocumentoIdentidad = :documento,
+            @Nombre = :nombre,
+            @FechaContratacion = :date,
+            @SaldoVacaciones = 0,
+            @EsActivo = 1,
+            @OutResulTCode = @OutResulTCode OUTPUT;
+
+        SELECT @OutResulTCode;
+    """)
+
+    with engine.connect() as conn:
+        result = conn.execute(sql_query, {
+            'id_puesto': id_puesto,
+            'documento': documento,
+            'nombre': nombre,
+            'date': str(datetime.now())
+        })
+        out_result_code = result.fetchone()[0]
+        conn.commit()
+
+
+    if out_result_code == 0:
+        return jsonify({"message": "Empleado insertado con éxito"}), 200
+    else:
+        return jsonify({"message": "Error al insertar el empleado"}), 400
 
 
 

@@ -24,10 +24,11 @@
             <button type="submit">Guardar Cambios</button>
         </form>
 
-        <form action="#" method="POST">
+        <form id="deleteForm" action="#" method="POST">
             <button type="submit" class="delete-button">Eliminar Empleado</button>
         </form>
     </div>
+
     <script>
         // Function to load the employee data for editing
         window.onload = async function() {
@@ -48,6 +49,7 @@
             document.getElementById('nombre').value = data.Nombre;
             document.getElementById('puesto').value = data.IdPuesto;  // Assuming IdPuesto corresponds to the select options
             data.Puestos.forEach(puesto => {
+                console.log(puesto);
                 const option = document.createElement('option');
                 option.value = puesto[0];
                 option.textContent = puesto[1];
@@ -75,12 +77,35 @@
             });
     
             const result = await response.json();
-            console.log(result);
             alert(result.message);
             if (result.message === 'Empleado actualizado con éxito') {
-                    console.log('Redirecting...');
-                    window.location.href = 'empleados.html'}
-            
+                window.location.href = 'empleados.html';
+            }
+        });
+
+        // Function to handle form submission for deleting the employee
+        document.getElementById('deleteForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const nombreEmpleado = new URLSearchParams(window.location.search).get('nombreEmpleado');
+            const valorDocId = new URLSearchParams(window.location.search).get('valorDocId');
+            mensaje="¿Estás seguro de que deseas eliminar al empleado "+nombreEmpleado+" con documento de identidad "+valorDocId+"?";
+            const confirmDelete = confirm(mensaje);
+            if (!confirmDelete) return;  // If the user cancels, don't proceed
+
+            const idEmpleado = new URLSearchParams(window.location.search).get('idEmpleado');
+
+            // Send request to delete the employee
+            const response = await fetch(`http://127.0.0.1:5000/eliminar-empleado`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idEmpleado })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            if (result.message === 'Empleado eliminado con éxito') {
+                window.location.href = 'empleados.html';  // Redirect after successful deletion
+            }
         });
     </script>
 </body>

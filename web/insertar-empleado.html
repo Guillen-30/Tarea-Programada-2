@@ -9,7 +9,7 @@
 <body>
     <div class="form-container">
         <h1>Insertar Empleado</h1>
-        <form action="#" method="POST">
+        <form id="insertarEmpleadoForm" method="POST">
             <label for="documento">Documento de Identidad:</label>
             <input type="text" id="documento" name="documento" placeholder="Ingrese el documento de identidad" required>
 
@@ -17,14 +17,54 @@
             <input type="text" id="nombre" name="nombre" placeholder="Ingrese el nombre del empleado" required>
 
             <label for="puesto">Puesto:</label>
-            <select id="puesto" name="puesto">
-                <option value="cajero">Cajero</option>
-                <option value="camarero">Camarero</option>
-                <!-- Más puestos -->
+            <select id="puesto" name="puesto" required>
+                <option value="" disabled selected>Seleccione un puesto</option>
             </select>
 
             <button type="submit">Guardar</button>
         </form>
     </div>
+
+    <script>
+        // Fetch available job positions (Puestos) and populate the dropdown
+        async function loadPuestos() {
+            const response = await fetch('http://127.0.0.1:5000/puestos');  // Endpoint to fetch puestos
+            const puestos = await response.json();
+
+            const puestoSelect = document.getElementById('puesto');
+            puestos.forEach(puesto => {
+                const option = document.createElement('option');
+                console.log(puesto);
+                option.value = puesto[[0]];
+                option.textContent = puesto[1];
+                document.getElementById('puesto').appendChild(option);
+                puestoSelect.appendChild(option);
+            });
+        }
+
+        // Submit the form data to the back-end
+        document.getElementById('insertarEmpleadoForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const documento = document.getElementById('documento').value;
+            const nombre = document.getElementById('nombre').value;
+            const puesto = document.getElementById('puesto').value;
+
+            const response = await fetch('http://127.0.0.1:5000/insertar-empleado', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ documento, nombre, puesto })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            if (result.message === 'Empleado insertado con éxito') {
+                window.location.href = 'empleados.html';
+            }
+        });
+
+        // Load puestos when the page loads
+        window.onload = loadPuestos;
+    </script>
 </body>
 </html>

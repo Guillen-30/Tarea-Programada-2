@@ -5,11 +5,4 @@ TODO:
 Cambiar SP insertarMovimiento para que cambie el saldoVacaciones del empleado por NuevoSaldo
 get_error_by_code
 
-Idea:
-
-select [Nombre]
-		,[ValorDocumentoIdentidad]
-		,[IdPuesto]
-		FROM dbo.Empleado
-if nombre != ''
-where ([nombre]LIKE '%' + @input + '%') or ([ValorDocumentoIdentidad]LIKE '%' + @input + '%') 
+HAY QUE HACER QUE VALIDE EN CAPA LOGICA (JS) LOS INPUTS ANTES DE ENVIARLOS A PY
