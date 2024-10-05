@@ -71,6 +71,10 @@
 
         const result = await response.json();
         alert(result.message);
+        if (result.message === 'Movimiento insertado con éxito') {
+            // Redirect to the movimientos page with the empleado_id
+            window.location.href = `movimientos.html?idEmpleado=${idEmpleado}`;
+        }
     });
 
         // Load movement types when the page loads
