@@ -23,7 +23,7 @@
             </tbody>
         </table>
 
-        <a href="insertar-movimiento.html" class="button">Insertar Movimiento</a>
+        <a id="insertarMovimientoBtn" href="#" class="button">Insertar Movimiento</a>
     </div>
 
     <script>
@@ -47,13 +47,17 @@
             movimientos.forEach(movimiento => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${movimiento[0].slice(0,14)}</td>
+                    <td>${movimiento[0].slice(0,16)}</td>
                     <td>${movimiento[1]}</td>
                     <td>${movimiento[2]}</td>
                     <td>${movimiento[3]}</td>
                 `;
                 tableBody.appendChild(row);
             });
+
+            // Modify the "Insertar Movimiento" link to include the empleado_id
+            const insertarMovimientoBtn = document.getElementById('insertarMovimientoBtn');
+            insertarMovimientoBtn.href = `insertar-movimiento.html?idEmpleado=${idEmpleado}`;
         };
     </script>
 </body>

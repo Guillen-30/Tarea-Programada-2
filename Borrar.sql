@@ -1,36 +1,56 @@
 USE [Tarea Programada 2]
 GO
-/****** Object:  StoredProcedure [dbo].[FetchEmpleados]    Script Date: 01/10/2024 03:50:27 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[InsertarMovimiento]    Script Date: 05/10/2024 01:58:34 a. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-
-
-
-ALTER PROCEDURE [dbo].[FetchEmpleados]
-    @OutResultCode INT OUTPUT
-	,@input NVARCHAR(100)
-
+ALTER PROCEDURE [dbo].[InsertarMovimiento]
+	-- Add the parameters for the stored procedure here
+	@IdEmpleado INT,
+	@IdTipoMovimiento INT,
+	@IdPostByUser INT,
+	@Fecha DATE,
+	@Monto INT,
+	@NuevoSaldo MONEY,
+	@PostInIP VARCHAR(16),
+	@PostTime DATETIME,
+	@OutResulTCode INT OUTPUT
 AS
-
 BEGIN
+
 	SET NOCOUNT ON;
 
-	BEGIN TRY
-	BEGIN
-		SELECT [Nombre]
-				  ,[ValorDocumentoIdentidad]
-				  ,[IdPuesto]
-			FROM dbo.Empleado
-			WHERE (@input = '' OR [Nombre] LIKE '%' + @input + '%')
-			   OR (@input = '' OR [ValorDocumentoIdentidad] LIKE '%' + @input + '%');
-	END;
-	END TRY
+	SET @OutResulTCode=0;
 
+	BEGIN TRY
+	
+	IF (@NuevoSaldo < 0)
+        BEGIN
+            SET @OutResulTCode = 50011;   -- Error code for negative balance
+        END
+        ELSE
+        BEGIN
+            -- Insert the new movement
+            INSERT INTO dbo.Movimiento(
+                IdEmpleado, IdTipoMovimiento, Fecha, Monto, NuevoSaldo, 
+                IdPostByUser, PostInIP, PostTime
+            )
+            VALUES (
+                @IdEmpleado, @IdTipoMovimiento, @Fecha, @Monto, @NuevoSaldo, 
+                @IdPostByUser, @PostInIP, @PostTime
+            );
+        END
+		BEGIN 
+		UPDATE dbo.Empleado
+			SET SaldoVacaciones=@NuevoSaldo
+			SELECT 1 FROM dbo.Empleado
+				WHERE (@IdEmpleado=Id)
+		END
+	END TRY
 	BEGIN CATCH
-		INSERT INTO dbo.DBErrors    VALUES (
+		INSERT INTO dbo.DBErrors	VALUES (
 			SUSER_SNAME(),
 			ERROR_NUMBER(),
 			ERROR_STATE(),
@@ -45,6 +65,8 @@ BEGIN
 
 	END CATCH;
 
-
 	SET NOCOUNT Off;
-END;
+
+END
+
+

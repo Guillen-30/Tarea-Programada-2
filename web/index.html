@@ -44,6 +44,7 @@
                 const result = await response.json();
                 alert(result.message);  // Handle success or failure
                 console.log(result.message);
+                const username = await fetch ('http://127.0.0.1:5000/get-username')
                 if (result.message === 'Login successful!') {
                     console.log('Redirecting...');
                     window.location.href = 'empleados.html';  // Redirect to the home page

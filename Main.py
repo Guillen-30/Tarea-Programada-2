@@ -2,7 +2,8 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 import pandas as pd
 from sqlalchemy import create_engine, text
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
+from flask_session import Session
 from flask_cors import CORS
 import socket
 
@@ -408,6 +409,61 @@ def buscar_empleado(engine, documento):
         print(f"\n\n\nBUSCAR:Error in buscar_empleado: {e}\n\n\n")
         return None
 
+def buscar_empleado_id(engine, id):
+    try:
+        sql_query = text("""
+                    DECLARE @OutResultCode INT;
+                    DECLARE @OutEmpleadoId INT;
+                    DECLARE @OutEmpleadoIdPuesto INT;
+                    DECLARE @OutEmpleadoNombre VARCHAR(256);
+                    DECLARE @OutEmpleadoFechaContratacion DATE;
+                    DECLARE @OutEmpleadoSaldoVacaciones INT;
+                    DECLARE @OutEmpleadoEsActivo BIT;
+                    DECLARE @OutValorDocumentoIdentidad NVARCHAR(64); 
+                     
+                    EXEC BuscarEmpleadoId
+                        @Id = :id_empleado,
+                        @OutResultCode = @OutResultCode OUTPUT,
+                        @OutEmpleadoId = @OutEmpleadoId OUTPUT,
+                        @OutEmpleadoIdPuesto = @OutEmpleadoIdPuesto OUTPUT,
+                        @OutEmpleadoNombre = @OutEmpleadoNombre OUTPUT,
+                        @OutEmpleadoFechaContratacion = @OutEmpleadoFechaContratacion OUTPUT,
+                        @OutEmpleadoSaldoVacaciones = @OutEmpleadoSaldoVacaciones OUTPUT,
+                        @OutEmpleadoEsActivo = @OutEmpleadoEsActivo OUTPUT,
+                        @OutValorDocumentoIdentidad = @OutValorDocumentoIdentidad OUTPUT;
+
+                   
+                    SELECT @OutResultCode AS OutResultCode, 
+                        @OutEmpleadoId AS OutEmpleadoId, 
+                        @OutEmpleadoIdPuesto AS OutEmpleadoIdPuesto,
+                        @OutEmpleadoNombre AS OutEmpleadoNombre, 
+                        @OutEmpleadoFechaContratacion AS OutEmpleadoFechaContratacion, 
+                        @OutEmpleadoSaldoVacaciones AS OutEmpleadoSaldoVacaciones, 
+                        @OutEmpleadoEsActivo AS OutEmpleadoEsActivo,
+                        @OutValorDocumentoIdentidad AS OutValorDocumentoIdentidad;
+
+    """)
+        with engine.begin() as connection:
+            result = connection.execute(sql_query, {'id_empleado': id})
+            output = result.fetchone()
+            
+            # Check if the query returned a valid result
+            if output is None:
+                return None
+
+            documento = output.OutValorDocumentoIdentidad
+            nombre = output.OutEmpleadoNombre
+            fecha_contratacion = output.OutEmpleadoFechaContratacion
+            saldo_vacaciones = output.OutEmpleadoSaldoVacaciones
+            es_activo = output.OutEmpleadoEsActivo
+            
+            salida = {'documento': documento, 'nombre': nombre, 'fecha_contratacion': fecha_contratacion, 'saldo_vacaciones': saldo_vacaciones, 'es_activo': es_activo}
+            return salida
+
+    except Exception as e:
+        print(f"\n\n\nError in buscar_empleado_id: {e}\n\n\n")
+        return None
+
 def buscar_tipo_movimiento(engine, nombre):
     try:
         sql_query = text("""
@@ -570,11 +626,16 @@ def get_current_ip():
     ip_address = socket.gethostbyname(hostname)
     return ip_address
 
-###WEB APP
+###!WEB APP
+
 app = Flask(__name__)
+app.config['SESSION_TYPE'] = 'filesystem'
+app.secret_key = "super secret key"
+Session(app)
 CORS(app)
 # Dictionary to track failed login attempts
 failed_attempts = {}
+usuario_activo='UsuarioScripts' #!!!!CAMBIAR A NONE, SOLO PARA TESTEAR
 
 # Connection to SQL Server
 def conexion_sql_server():
@@ -585,10 +646,10 @@ def conexion_sql_server():
 # Login route
 @app.route('/login', methods=['POST'])
 def login():
+    global usuario_activo
     data = request.json
     username = data['username']
     password = data['password']
-    print (username, password)
     engine = conexion_sql_server()
     current_time = datetime.now()
 
@@ -618,8 +679,18 @@ def login():
     # Successful login
     if username in failed_attempts:
         del failed_attempts[username]  # Reset failed attempts on successful login
-
+    session['user'] = username
+    usuario_activo=username
     return jsonify({"message": "Login successful!"}), 200
+
+@app.route('/get-username', methods=['GET'])
+def get_username():
+    if 'user' in session:  # Change 'username' to 'user' to match the session key used in login
+        return jsonify({"username": session['user']}), 200
+    else:
+        return jsonify({"message": "Not logged in"}), 401
+
+
 
 @app.route('/empleados', methods=['GET'])
 def get_empleados():
@@ -859,6 +930,83 @@ def insertar_empleado():
     else:
         return jsonify({"message": "Error al insertar el empleado"}), 400
 
+@app.route('/tipo-movimientos', methods=['GET'])
+def get_tipo_movimientos():
+    engine = conexion_sql_server()
+    sql_query = text("""
+        DECLARE @OutResulTCode INT;
+        EXEC FetchTipoMovimiento
+        @OutResulTCode = @OutResulTCode OUTPUT;
+    """)
+
+    with engine.connect() as conn:
+        result = conn.execute(sql_query)
+        tipo_movimientos = list(result.fetchall())
+        for i, tipo_movimiento in enumerate(tipo_movimientos):
+            tipo_movimientos[i] = list(tipo_movimiento)
+
+    return jsonify(tipo_movimientos), 200
+
+
+@app.route('/insertar-movimiento', methods=['POST'])
+def insertar_movimiento():
+    data = request.json
+    
+    monto = data['monto']
+    id_empleado = data['idEmpleado']
+
+    engine = conexion_sql_server()
+    tipo_movimiento = buscar_tipo_movimiento(engine,data['tipoMovimientoText'])
+
+    # Get the user ID by username
+    user=buscar_user(engine, usuario_activo)
+    user_id = user['id']
+
+    # Get the IP address of the current user
+    user_ip = get_current_ip()
+
+    # Insert the movement using the stored procedure
+    sql_query = text("""
+        DECLARE @OutResulTCode INT;
+        EXEC dbo.InsertarMovimiento
+            @IdEmpleado = :id_empleado,
+            @IdTipoMovimiento = :id_tipo_movimiento,
+            @Fecha = :fecha,
+            @PostTime = :hora,
+            @Monto = :monto,
+            @NuevoSaldo = :nuevo_saldo,
+            @PostInIP = :post_in_ip,
+            @IdPostByUser = :post_by_user,
+            @OutResulTCode = @OutResulTCode OUTPUT;
+
+        SELECT @OutResulTCode;
+    """)
+    if tipo_movimiento['tipo_accion'] != "Credito":
+        monto = -1 * int(monto)
+    print("Monto",monto)
+
+    nuevo_saldo = buscar_empleado_id(engine, id_empleado)['saldo_vacaciones'] + int(monto)
+
+    with engine.connect() as conn:
+        result = conn.execute(sql_query, {
+            'id_empleado': id_empleado,
+            'id_tipo_movimiento': tipo_movimiento["id"],
+            'fecha': datetime.now().date(),
+            'hora': datetime.now(),
+            'monto': monto,
+            'nuevo_saldo': nuevo_saldo,
+            'post_in_ip': str(user_ip),
+            'post_by_user': user_id
+        })
+        print("DATOS\n",id_empleado, tipo_movimiento["id"], datetime.now().date(), str(datetime.now())[:19], monto, nuevo_saldo, user_ip, user_id)
+        out_result_code = result.fetchone()[0]
+        conn.commit()
+        print(out_result_code)
+
+    if out_result_code == 0:
+        return jsonify({"message": "Movimiento insertado con éxito"}), 200
+    else:
+        return jsonify({"message": "Error al insertar el movimiento"}), 400
 
 
 if __name__ == '__main__':

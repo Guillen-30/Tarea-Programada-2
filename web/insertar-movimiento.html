@@ -9,12 +9,10 @@
 <body>
     <div class="form-container">
         <h1>Insertar Movimiento</h1>
-        <form action="#" method="POST">
+        <form id="insertarMovimientoForm" method="POST">
             <label for="tipo-movimiento">Tipo de Movimiento:</label>
-            <select id="tipo-movimiento" name="tipo-movimiento">
-                <option value="venta-vacaciones">Venta de vacaciones</option>
-                <option value="bono-vacacional">Bono vacacional</option>
-                <!-- Más tipos de movimientos -->
+            <select id="tipo-movimiento" name="tipo-movimiento" required>
+                <option value="" disabled selected>Seleccione un tipo de movimiento</option>
             </select>
 
             <label for="monto">Monto:</label>
@@ -23,5 +21,60 @@
             <button type="submit">Guardar Movimiento</button>
         </form>
     </div>
+
+    <script>
+        // Fetch available movement types and populate the dropdown
+        async function loadTiposMovimiento() {
+            const response = await fetch('http://127.0.0.1:5000/tipo-movimientos');
+            const tipos = await response.json();
+
+            const tipoMovimientoSelect = document.getElementById('tipo-movimiento');
+            tipos.forEach(tipo => {
+                const option = document.createElement('option');
+                option.value = tipo[0];  // Assuming tipo[0] is the ID
+                option.textContent = tipo[1];  // Assuming tipo[1] is the name
+                tipoMovimientoSelect.appendChild(option);
+            });
+        }
+
+        // Submit the form data to the back-end
+        document.getElementById('insertarMovimientoForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        // Get the value of the selected option
+        const tipoMovimientoSelect = document.getElementById('tipo-movimiento');
+        const tipoMovimiento = tipoMovimientoSelect.value;
+
+        // Get the text content of the selected option
+        const tipoMovimientoText = tipoMovimientoSelect.options[tipoMovimientoSelect.selectedIndex].textContent;
+
+        const monto = document.getElementById('monto').value;
+
+        // Extract the empleado_id from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const idEmpleado = urlParams.get('idEmpleado');
+        if (!idEmpleado) {
+            alert('No se encontró el Id del empleado');
+            return;
+        }
+
+        // You can use `tipoMovimientoText` to include the selected option's text content if needed
+        console.log('Selected option value:', tipoMovimiento);
+        console.log('Selected option text:', tipoMovimientoText);
+
+        // Send the POST request with the empleado_id included in the body
+        const response = await fetch('http://127.0.0.1:5000/insertar-movimiento', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tipoMovimientoText, monto, idEmpleado })
+        });
+
+        const result = await response.json();
+        alert(result.message);
+    });
+
+        // Load movement types when the page loads
+        window.onload = loadTiposMovimiento;
+    </script>
 </body>
 </html>
