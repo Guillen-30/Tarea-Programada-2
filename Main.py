@@ -893,7 +893,7 @@ def get_puestos():
 
 
 @app.route('/insertar-empleado', methods=['POST'])
-def insertar_empleado():
+def insertar_empleado_nuevo():
     data = request.json
     documento = data['documento']
     nombre = data['nombre']
@@ -949,7 +949,7 @@ def get_tipo_movimientos():
 
 
 @app.route('/insertar-movimiento', methods=['POST'])
-def insertar_movimiento():
+def insertar_movimiento_empleado():
     data = request.json
     
     monto = data['monto']
