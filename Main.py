@@ -1008,6 +1008,49 @@ def insertar_movimiento_empleado():
     else:
         return jsonify({"message": "Error al insertar el movimiento"}), 400
 
-
+def insert_bitacora(engine,TipoEvento,String):
+    
+    if TipoEvento == 1:
+        #Login Exitoso
+        print()
+    elif TipoEvento == 2:
+        #Login No Exitoso
+        print()
+    elif TipoEvento == 3:
+        #Login deshabilitado
+        print()
+    elif TipoEvento == 4:
+        #Logout
+        print()
+    elif TipoEvento == 5:
+        #Insercion no exitosa
+        print()
+    elif TipoEvento == 6:
+        #Insercion exitosa
+        print()    
+    elif TipoEvento == 7:
+        #Update no exitoso
+        print()
+    elif TipoEvento == 8:
+        #Update exitoso
+        print()
+    elif TipoEvento == 9:
+        #Intento de borrado
+        print()
+    elif TipoEvento == 10:
+        #Borrado exitoso
+        print()
+    elif TipoEvento == 11:
+        #Consulta con filtro de nombre
+        print()
+    elif TipoEvento == 12:
+        #Consulta con filtro de cedula
+        print()   
+    elif TipoEvento == 13:
+        #Intento de insertar movimiento
+        print()
+    elif TipoEvento == 14:
+        #Insertar movimiento exitoso
+        print()   
 if __name__ == '__main__':
     app.run(debug=True)
