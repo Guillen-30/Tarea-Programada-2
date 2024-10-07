@@ -632,7 +632,9 @@ app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.secret_key = "super secret key"
 Session(app)
-CORS(app)
+CORS(app, supports_credentials=True)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 # Dictionary to track failed login attempts
 failed_attempts = {}
 usuario_activo='UsuarioScripts' #!!!!CAMBIAR A NONE, SOLO PARA TESTEAR
@@ -682,6 +684,15 @@ def login():
     session['user'] = username
     usuario_activo=username
     return jsonify({"message": "Login successful!"}), 200
+
+@app.route('/logout', methods=['POST', 'GET'])
+def logout():
+    global usuario_activo
+    session.pop('user', None)  # Clear the user session
+    usuario_activo=None
+    print (session, usuario_activo)
+    return jsonify({"message": "Logged out successfully"}), 200
+
 
 @app.route('/get-username', methods=['GET'])
 def get_username():

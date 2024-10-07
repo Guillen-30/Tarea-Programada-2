@@ -147,3 +147,35 @@ table {
         table tbody tr:nth-child(odd) {
             background-color: #f9f9f9;
         }
+
+#logoutButton {
+    width: 48px;
+    background-color: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+}
+
+#logoutButton:hover {
+    color: #ff0000; /* Change color on hover */
+}
+
+/* Logout button icon in the top-left */
+.logout-icon {
+    top: 10px;
+    left: 10px;
+    background-color: white;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+}
+
+.logout-icon:hover {
+    color: #ff0000; /* Change color on hover */
+}
+
+.logout-icon i {
+    font-size: 24px;  /* Icon size */
+}

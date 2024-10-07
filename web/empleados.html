@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Empleados</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
 
     </style>
 </head>
 <body>
     <div class="container">
+        <button id="logoutButton" class="logout-icon">
+            <i class="fas fa-sign-out-alt"></i> <!-- FontAwesome logout icon -->
+        </button>
         <h1>Lista de Empleados</h1>
         <form id="filterForm" method="GET">
             <input type="text" id="filterInput" placeholder="Buscar por nombre o documento">
@@ -68,6 +72,22 @@
 
         // Load employees when the page loads without any filter
         window.onload = () => loadEmployees();
+
+        document.getElementById('logoutButton').addEventListener('click', async function () {
+        const response = await fetch('http://127.0.0.1:5000/logout', {
+            method: 'POST',
+            credentials: 'include',  // Ensure the session cookie is included
+            headers: {
+                'Content-Type': 'application/json'  // Set the content type
+            }
+        });
+
+        if (response.ok) {
+            window.location.href = 'login.html';  // Redirect to login page after logout
+        } else {
+            alert('Error logging out');
+        }
+    });
     </script>
 </body>
 </html>
