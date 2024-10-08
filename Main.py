@@ -1019,49 +1019,429 @@ def insertar_movimiento_empleado():
     else:
         return jsonify({"message": "Error al insertar el movimiento"}), 400
 
-def insert_bitacora(engine,TipoEvento,String):
+def insert_bitacora(engine,TipoEvento,lista):
     
     if TipoEvento == 1:
-        #Login Exitoso
-        print()
+        #Login Exitoso [IdTipoEvento,Descripcion,IdPostByUser,PostInIP,PostTime]
+     
+        Descripcion = lista[1]
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()
+        
+        
+        
     elif TipoEvento == 2:
-        #Login No Exitoso
-        print()
+        #Login No Exitoso [IdTipoEvento, [Intentos, Codigo de Error],IdPostByUser,PostInIP,PostTime]
+        CodigoE = str(lista[1][1])
+        Intentos = str(lista[1][0])
+        Descripcion = "Intentos: " +  Intentos + " Codigo de Error: " + CodigoE
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()
+        
     elif TipoEvento == 3:
-        #Login deshabilitado
+        #Login deshabilitado [IdTipoEvento,Descripcion,IdPostByUser,PostInIP,PostTime]
+        Descripcion = lista[1]
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()
         print()
     elif TipoEvento == 4:
-        #Logout
+        Descripcion = lista[1]
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()
         print()
     elif TipoEvento == 5:
-        #Insercion no exitosa
-        print()
+        #Insercion no exitosa [IdTipoEvento,[Descripción del error , valordocumento identidad, Nombre del empleado, Nombre del Puesto ],IdPostByUser,PostInIP,PostTime]
+        CodigoD = str(lista[1][0])
+        DocId = str(lista[1][1])
+        NombreE = str(lista[1][2])
+        NombreP = str(lista[1][3])
+        Descripcion = " Descripcion Del Error: " +  CodigoD + " ValorDocumentoIdentidad: " + DocId + " Nombre de Empleado: " + NombreE + " Nombre Puesto: " + NombreP
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()
+            
     elif TipoEvento == 6:
-        #Insercion exitosa
-        print()    
+        #Insercion exitosa  [IdTipoEvento,[Valor documento identidad, Nombre del empleado,identidad, Nombre del Puesto], IdPostByUser, PostInIP, PostTime]
+        DocId = str(lista[1][0])
+        NombreE = str(lista[1][1])
+        Identidad = str(lista[1][2])
+        NombreP = str(lista[1][3])
+        Descripcion = "ValorDocumentoIdentidad: " + DocId + " Nombre de Empleado: " + NombreE + " Identidad: " + Identidad + " Nombre Puesto: " + NombreP
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()
     elif TipoEvento == 7:
         #Update no exitoso
-        print()
+        #[IdTipoEvento,[],IdPostByUser,PostInIP,PostTime]
+        #Descripción del error, valor documento identidad antes deeditarse, Nombre del empleado antes de editarse, Nombredel Puesto antes de editarse, valor documento identidaddespues de editarse, Nombre del empleado despues deeditarse, Nombre del Puesto despues de editarse
+        DError = str(lista[1][0])
+        DocId = str(lista[1][1])
+        NombreE = str(lista[1][2])
+        NombreP = str(lista[1][3])
+        DocIdAfter = str(lista[1][4])
+        NombreEAfter = str(lista[1][5])
+        NombrePAfter = str(lista[1][6])
+        
+        Descripcion = "//" + DError + "//" + DocId + "//" + NombreE + "//" + NombreP + "//" + DocIdAfter + "//" + NombreEAfter + "//" + NombrePAfter
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()
     elif TipoEvento == 8:
         #Update exitoso
-        print()
+        #[IdTipoEvento,[],IdPostByUser,PostInIP,PostTime]
+        #Valor documento identidad antes de editarse, Nombre del empleado antes de editarse, Nombre del Puesto antes de editarse, valor documento identidad despues de de editarse, Nombre del empleado despues de editarse, Nombre del 
+        #Descripción del error, valor documento identidad antes deeditarse, Nombre del empleado antes de editarse, Nombredel Puesto antes de editarse, valor documento identidaddespues de editarse, Nombre del empleado despues deeditarse, Nombre del Puesto despues de editarse
+        DocId = str(lista[1][0])
+        NombreE = str(lista[1][1])
+        NombreP = str(lista[1][2])
+        DocIdAfter = str(lista[1][3])
+        NombreEAfter = str(lista[1][4])
+        NombrePAfter = str(lista[1][5])
+        
+        Descripcion = "//" + DocId + "//" + NombreE + "//" + NombreP + "//" + DocIdAfter + "//" + NombreEAfter + "//" + NombrePAfter
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()
     elif TipoEvento == 9:
         #Intento de borrado
-        print()
+        DocId = str(lista[1][0])
+        NombreE = str(lista[1][1])
+        NombreP = str(lista[1][2])
+        SaldoVacacines = str(lista[1][3])
+        
+        Descripcion = "//" + DocId + "//" + NombreE + "//" + NombreP + "//" + SaldoVacacines
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()        
     elif TipoEvento == 10:
         #Borrado exitoso
-        print()
+        DocId = str(lista[1][0])
+        NombreE = str(lista[1][1])
+        Identidad = str(lista[1][2])
+        NombreP = str(lista[1][3])
+        SaldoVacacines = str(lista[1][4])
+        
+        Descripcion = "//" + DocId + "//" + NombreE + "//" + Identidad + "//" + NombreP + "//" + SaldoVacacines
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit() 
     elif TipoEvento == 11:
         #Consulta con filtro de nombre
-        print()
+        Descripcion = lista[1]
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()         
     elif TipoEvento == 12:
         #Consulta con filtro de cedula
-        print()   
+
+        Descripcion = lista[1]
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()      
     elif TipoEvento == 13:
         #Intento de insertar movimiento
-        print()
+        DError =
+        DocId =
+        
+        
+        Descripcion = 
+        IdPostByUser = lista[2]
+        PostInIP = lista[3]
+        PostTime = lista[4]
+        sql_query = text("""
+            DECLARE @OutResulTCode INT;
+            EXEC dbo.InsertarMovimiento
+                @IdTipoEvento = TipoEvento:,
+                @Descripcion = :Descripcion,
+                @IdPostByUser = :IdPostByUser,
+                @PostInIP = :PostInIP,
+                @PostTime = : PostTime,
+                @OutResulTCode = @OutResulTCode OUTPUT;
+
+            SELECT @OutResulTCode;
+        """)
+        with engine.connect() as conn:
+            result = conn.execute(sql_query, {
+                'IdTipoEvento': TipoEvento:,
+                'Descripcion': Descripcion,
+                'IdPostByUser': IdPostByUser,
+                'PostInIP': PostInIP,
+                'PostTime': PostTime,
+            })
+            out_result_code = result.fetchone()[0]
+            conn.commit()      
     elif TipoEvento == 14:
         #Insertar movimiento exitoso
+        print()   xitoso
         print()   
 if __name__ == '__main__':
     app.run(debug=True)
